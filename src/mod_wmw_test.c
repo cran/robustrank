@@ -78,7 +78,7 @@ static void getrank (int n, double data[], double rank[])
 }
 
 
-void SampleNoReplace(int k, int n, int *y, int *x)
+static void SampleNoReplace(int k, int n, int *y, int *x)
 {
     int i, j;
     int n0=n;

@@ -1,20 +1,28 @@
 \name{sim.partially.matched}
+\alias{r2sample}
 \alias{sim.partially.matched}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Simulate Partially Matched Two-Sample Data
+Simulate Paired, Independent, or Partially Matched Two-Sample Data
 }
 \description{
-Generates partially matched two-sample data for Monte Carlo studies.
+sim.partially.matched generates partially matched two-sample data.  for Monte Carlo studies. 
+r2sample is a wrapper for sim.partially.matched and generates indepenent two-sample data.
 }
 \usage{
 sim.partially.matched(m, n.x, n.y, 
 distr = c("normal", "logistic", "student", "mixnormal", "gamma"), params, seed)
+
+r2sample(m, n, 
+distr = c("normal", "logistic", "student", "mixnormal"), params, seed)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{m}{
 Number of pairs.
+}
+  \item{n}{
+Number of Ys.
 }
   \item{n.x}{
 Number of extra Xs.
@@ -26,36 +34,40 @@ Number of extra Ys.
 Distributions.
 }
   \item{params}{
-Parameters. See details.
+Named vector. See details.
 }
   \item{seed}{
 Seed for random number generator.
 }
 }
 \details{
-The parameters are interpreted in the following block of code:
-    if (distr %in% c("normal","student","logistic")) 
-        params=c(loc.2=paramss[1],rho=paramss[2],scale.2=paramss[3])
-    else if (distr=="mixnormal") 
-        params=c(p.1=paramss[1],p.2=paramss[2],sd.n=paramss[3])
-    else if (distr=="gamma") 
-        params=c(loc.2=paramss[1],shape.1=paramss[2],shape.2=paramss[3],rate.1=paramss[4],rate.2=paramss[5],rho=paramss[6])
+If the distribution is in \code{c("normal","student","logistic")}, \code{params} should have three fields: loc.2, rho and scale.2; loc.1 is set to 0 and scale.1 is set to 1.
+
+If the distribution is mixnormal, \code{params} should have three fields: p.1, p.2 and sd.n. 
+
+If the distribution is gamma, \code{params} should have fix fields: loc.2, shape.1, shape.2, rate.1, rate.2 and rho.
+
+For details on bivariate logistic distribution, see \code{rbilogistic}
     
 }
 \value{
-A list with the following components:
+sim.partially.matched return a list with the following components:
   \item{X}{m sample 1 that pair with Y}
   \item{Y}{m sample 2 that pair with X}
   \item{Xprime}{n.x sample 1}
   \item{Yprime}{n.y sample 2}
-}
-\seealso{
- \code{\link{r2sample}}
+r2sample returns a list with the following components:
+  \item{X}{m sample 1 that are independent of Y}
+  \item{Y}{n sample 2 that are independent of X}
 }
 \examples{
-\dontrun{
-    dat=sim.partially.matched(m=m,n.x=0,n.y=0,distr=distr,params=params,seed=seed)
-    X=dat$X; Y=dat$Y; Yprime=dat$Yprime    
-}
+dat=sim.partially.matched(m=10,n.x=5,n.y=4,distr="normal",
+    params=c("loc.2"=0,"rho"=0,"scale.2"=1),seed=1)
+X=dat$X; Y=dat$Y; Yprime=dat$Yprime    
+
+dat=sim.partially.matched(m=10,n.x=5,n.y=4,distr="logistic",
+    params=c("loc.2"=0,"rho"=0,"scale.2"=1),seed=1)
+X=dat$X; Y=dat$Y; Yprime=dat$Yprime    
+
 
 }

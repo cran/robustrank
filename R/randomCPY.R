@@ -115,7 +115,7 @@ rbilogistic=function(n, loc.1, loc.2, scale.1, scale.2, rho) {
         }
         suppressMessages({ myCop <- copula::amhCopula(param=theta) }) # suppress msg: parameter at boundary ==> returning indepCopula()
         myMvd <- copula::mvdc(copula=myCop, margins=c("logis", "logis"), paramMargins=list(list(location=loc.1, scale=scale.1), list(location=loc.2, scale=scale.2)))
-        dat <- suppressWarnings(copula::rmvdc(myMvd, n))        
+        dat <- (copula::rMvdc(n, myMvd))        
     } else {
         stop("cannot simulate a bivariate logistic distribution with this correlation value")
     }
@@ -124,7 +124,7 @@ rbilogistic=function(n, loc.1, loc.2, scale.1, scale.2, rho) {
 rbigamma=function(n, shape.1, shape.2, rate.1, rate.2, rho) {
     myCop <- copula::normalCopula(param=rho)
     myMvd <- copula::mvdc(copula=myCop, margins=c("gamma", "gamma"), paramMargins=list(list(shape=shape.1, rate=rate.1), list(shape=shape.2, rate=rate.2)))
-    dat <- suppressWarnings(copula::rmvdc(myMvd, n))        
+    dat <- (copula::rMvdc(n, myMvd))        
 }
 
 dilog <- function(x) {

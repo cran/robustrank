@@ -100,12 +100,7 @@ pair.wmw.test=function(X,Y
 
 # R implementation, for debugging use
 compute.pair.wmw.Z=function(X,Y, alternative, correct, method, return.all=FALSE) {
-  
-    outer.3.mean=function(x,y,z,func) {
-        allidx = expand.grid(x,y,z)
-        mean(func(allidx[,1],allidx[,2],allidx[,3]),na.rm=TRUE)
-    }
-    
+      
     m=length(X)
     n=m
     
@@ -189,4 +184,9 @@ compute.pair.wmw.Z=function(X,Y, alternative, correct, method, return.all=FALSE)
     
     if(!return.all) return(z) else return(c(U=U, var.large=var.large, var.large.0=var.large.0, 
         var.exact=var.exact, var.exact.0=var.exact.0, var.exact.1=var.exact.1, var.exact.2=var.exact.2, var.exact.3=var.exact.3)) 
+}
+
+outer.3.mean=function(x,y,z,func) {
+    allidx = expand.grid(x,y,z)
+    mean(func(allidx[,1],allidx[,2],allidx[,3]),na.rm=TRUE)
 }

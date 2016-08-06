@@ -1,10 +1,9 @@
 useDynLib(robustrank)
 
-export(mod.wmw.test, pair.wmw.test, sim.partially.matched, r2sample)
+export(mod.wmw.test, pair.wmw.test, sim.partially.matched, r2sample, pm.wilcox.test)
 
 
 importFrom("stats", "ecdf", "pchisq", "pnorm", "var")
 importFrom("utils", "combn")
 importFrom("stats", "cov", "dnorm", "rbinom", "rgamma", "rmultinom", "rnorm", "runif", "uniroot")
-
-importFrom("pracma", "simpadpt")
+importFrom("stats", "qnorm", "wilcox.test")

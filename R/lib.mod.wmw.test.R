@@ -8,13 +8,13 @@ mod.wmw.test=function(X,Y, alternative = c("two.sided", "less", "greater"), corr
     method <- match.arg(method)
     mode <- match.arg(mode)
     
-    m=length(X)
-    n=length(Y)
-    N=m+n
-    
     # if not converted to double, .Call may throw errors for integer X/Y
     X=as.double(X[!is.na(X)])
     Y=as.double(Y[!is.na(Y)])
+    
+    m=length(X)
+    n=length(Y)
+    N=m+n
     
     if(!correct) .corr=0 else .corr=switch(alternative, "two.sided" = 2, "greater" = -1, "less" = 1)         
     if(useC) {
