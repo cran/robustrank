@@ -55,7 +55,8 @@ mod.wmw.test=function(X,Y, alternative = c("two.sided", "less", "greater"), corr
             } else {
                 z.mc=apply(indexes, 2, function(ind.x) {
                     ind.y=setdiff(1:N, ind.x)
-                    compute.Z(xy[ind.x], xy[ind.y], alternative=alternative, correct=correct, method=ifelse(method=="comb2","wmw",method))
+                    tmp=compute.Z(xy[ind.x], xy[ind.y], alternative=alternative, correct=correct, method=ifelse(method=="comb2","wmw",method))
+                    tmp
                 })
             }
 ## numerical instability

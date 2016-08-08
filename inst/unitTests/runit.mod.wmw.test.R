@@ -34,9 +34,11 @@ set.seed(1); X=rnorm(5); Y=rnorm(10,mean=1,sd=1.4)
 checkEqualsNumeric(mod.wmw.test(Y, X, correct=FALSE, method="fp", perm=FALSE, trace=1), 0.08068789, tolerance=tolerance) # exact
 checkEqualsNumeric(mod.wmw.test(Y, X, correct=FALSE, method="fp", perm=TRUE, mc.rep=1e4, trace=1), 0.1165501, tolerance=tolerance) # exact
 checkEqualsNumeric(mod.wmw.test(Y, X, correct=FALSE, method="fp", perm=TRUE, mc.rep=1e2, trace=1), 0.06, tolerance=tolerance) # MC
-Y=c(Y,X[1:3]) # create ties
+Y=c(Y,X[1:3]) # create ties NOTE that the R implementation of the following is not correct
 checkEqualsNumeric(mod.wmw.test(Y, X, correct=TRUE,  method="fp", perm=FALSE, trace=1), 0.35205,  tolerance=tolerance)
 checkEqualsNumeric(mod.wmw.test(Y, X, correct=TRUE,  method="fp", perm=TRUE, mc.rep=1e4, trace=1),  0.3311158,  tolerance=tolerance)
+mod.wmw.test(Y, X, correct=TRUE,  method="fp", perm=TRUE, mc.rep=1e4, trace=1, useC=FALSE)
+
 
 # same as the next commented block but with hard-coded values
 set.seed(1); X=rnorm(5); Y=rnorm(10,mean=1,sd=1.4)

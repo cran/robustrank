@@ -197,6 +197,7 @@ SEXP mod_wmw_test(SEXP _X, SEXP _Y, SEXP _corr, SEXP _method, SEXP _mc_rep, SEXP
     for (i = 0; i < m; i++) xy0[i]=X0[i];
     for (j = 0; j < n; j++) xy0[m+j]=Y0[j];    
     
+    // adj does not depend on permutations, so is calculated here
     // NTIES <- table(r)
     for (i = 0; i < N; i++) nties[i]=1;
     int n_unique=0;
@@ -244,15 +245,21 @@ SEXP mod_wmw_test(SEXP _X, SEXP _Y, SEXP _corr, SEXP _method, SEXP _mc_rep, SEXP
                 for (i = 0; i < m; i++) index[i]=comb[c++];        
                 index_cur=0; perm_cur=0;
                 for (i=1; i<=N; i++) {
-                    if (i==index[index_cur]) {index_cur++; continue;} else perm[perm_cur++]=i;
+                    if (index_cur<m && i==index[index_cur]) {index_cur++; continue;} else perm[perm_cur++]=i;
                 }  
                 //for (i = 0; i < m; i++) PRINTF("%i ", index[i]); PRINTF("\n");
                 //for (j = 0; j < n; j++) PRINTF("%i ", perm [j]); PRINTF("\n");
                 
                 for (i = 0; i < m; i++) X[i]=xy0[index[i]-1];
                 for (j = 0; j < n; j++) Y[j]=xy0[perm[j]-1];
+                
+                //for (i = 0; i < m; i++) PRINTF("%f ", X[i]); PRINTF("\n");
+                //for (j = 0; j < n; j++) PRINTF("%f ", Y[j]); PRINTF("\n");
                 ans[b]=compute_z(X, Y, xy, m, n, corr, method, adj);        
-            }    
+                //PRINTF("%i %f %f %f \n",corr, method, adj, ans[b]); 
+            }    //PRINTF("\n");
+            
+                //for (i = 0; i < N; i++) PRINTF("%f ", xy0[i]); PRINTF("\n");
         }
     }
                 
