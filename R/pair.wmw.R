@@ -137,12 +137,12 @@ compute.pair.wmw.Z=function(X,Y, alternative, correct, method, return.all=FALSE)
     tmp.1=mean(outer(1:m,1:n, function(i,j) ifelse(i!=j,Y[i]>X[i] & Y[j]>X[i],NA)), na.rm=TRUE) 
     tmp.2=mean(outer(1:m,1:n, function(i,j) ifelse(i!=j,Y[i]>X[i] & Y[i]>X[j],NA)), na.rm=TRUE)
     tmp.3=mean(outer(1:m,1:n, function(i,j) ifelse(i!=j,Y[j]>X[i] & Y[i]>X[j],NA)), na.rm=TRUE)
-    v.f=function(theta.1, tao.1) {
+    v.f=function(theta.1, tao.1, C.only=FALSE) {
         finite.adj.1 = ifelse(theta.1==1/2 & tao.1==1/2, 1, finite.adj) # if under the null, we are not estimating some terms, so there is no need to adjust
         A  =m*        tao.1*(1-tao.1) *finite.adj.1
         B  =m*(m-1)*  (tmp.1 - tao*theta + tmp.2 - tao*theta) *finite.adj
         C.1=m*(m-1)*  {theta.1*(1-theta.1) *finite.adj.1  + (tmp.3 - theta*theta)*finite.adj}
-        A + 2*B + C.1
+        if (C.only) C.1 else A + 2*B + C.1
     }
         
     # VarF_{X}(Y_{j}) and VarF_{Y}(X_{i})
@@ -164,8 +164,11 @@ compute.pair.wmw.Z=function(X,Y, alternative, correct, method, return.all=FALSE)
 #    var.exact.x=(C.2.var.0 + C.2.cov)/m^3 # no lower order term, does not do as well, dropped from laster MC studies
     # correct for bias in theta^2 est
     # one-step
-    C.2.cov.1=  m*(m-1)*(m-2)* (tmp.4 - (theta.sq-var.exact.1/m)) * 2 
-    var.exact.2=(C.2.var.0 + C.2.cov.1+v.f(theta,tao))/m^3 # the best so far
+    C.2.cov.1=  m*(m-1)*(m-2)* (tmp.4 - (theta.sq-var.exact.1/m)) * 2 # first order approximation approximation b/c var.exact.1 is not C
+    # more precisely, but no difference in MC studies
+    #C = C.2.var.0 + C.2.cov + v.f(theta,tao,C.only=TRUE)
+    #C.2.cov.1=  m*(m-1)*(m-2)* (tmp.4 - (theta.sq-C/m/m/(m-1)/(m-1))) * 2 
+    var.exact.2=(C.2.var.0 + C.2.cov.1 + v.f(theta,tao))/m^3 # the best so far, only adjust first order term that depends on theta.sq: C.2.cov
 #    # two-step, fairly small improvement over one-step, dropped from further studies
 #    C.2.cov.2=  m*(m-1)*(m-2)* (tmp.4 - (theta.sq-var.exact.2/m)) * 2 
 #    var.exact.x=(C.2.var.0 + C.2.cov.2+v.f(theta,tao))/m^3 

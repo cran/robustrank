@@ -177,6 +177,8 @@ double compute_pm_wmw_Z(double * X, double * Y, double * xy, double * X1, double
     return z;
 }
 
+// only implements mw.mw.20 now
+// _mc_rep is not used for now
 // remember only use sexp to return value
 SEXP pm_wmw_test(SEXP _X, SEXP _Y, SEXP _Z, SEXP _corr, SEXP _method, SEXP _mc_rep){
     
@@ -240,6 +242,7 @@ SEXP pm_wmw_test(SEXP _X, SEXP _Y, SEXP _Z, SEXP _corr, SEXP _method, SEXP _mc_r
         ans[0]=compute_pm_wmw_Z(X0, Y0, xy, X0, Z0, x1z, m, n, corr, method, adj); 
     } else {
         if (mc_rep>1) {
+        // if commented out this block, also need to comment out variable declaration to avoid warning messages
             // Monte Carlo
             for (b=0; b<mc_rep; b++) {                
                 // resample X and Y
