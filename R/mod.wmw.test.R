@@ -59,6 +59,7 @@ mod.wmw.test=function(X,Y, alternative = c("two.sided", "less", "greater"), corr
                     tmp
                 })
             }
+            print(sort(z.mc))
 ## numerical instability
 #t=2075
 #print((z-z.mc[t]))

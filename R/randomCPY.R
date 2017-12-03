@@ -117,7 +117,10 @@ rbilogistic=function(n, loc.1, loc.2, scale.1, scale.2, rho) {
         myMvd <- copula::mvdc(copula=myCop, margins=c("logis", "logis"), paramMargins=list(list(location=loc.1, scale=scale.1), list(location=loc.2, scale=scale.2)))
         dat <- (copula::rMvdc(n, myMvd))        
     } else {
-        stop("cannot simulate a bivariate logistic distribution with this correlation value")
+        # use normal copula outside those windows of rho
+        myCop <- copula::normalCopula(param=rho)
+        myMvd <- copula::mvdc(copula=myCop, margins=c("logis", "logis"), paramMargins=list(list(location=loc.1, scale=scale.1), list(location=loc.2, scale=scale.2)))
+        dat <- (copula::rMvdc(n, myMvd))        
     }
 }
 
@@ -131,3 +134,30 @@ dilog <- function(x) {
     flog  <- function(t) log(t) / (1-t)  # singularity at t=1, almost at t=0
     pracma::simpadpt(flog, 1, x, tol = 1e-12)
 }
+
+# log.p and lower.tail are not implemented to reduce complexity
+rdoublexp=function(n, location=0, scale=1) rexp(n,rate=1/scale)*(rbern(n,1/2)*2-1)+location
+ddoublexp=function(x, location=0, scale=1) dexp(abs(x-location),rate=1/scale)/2
+qdoublexp=function(p, location=0, scale=1) ifelse(p>0.5,1,-1)*qexp(1-(1-ifelse(p>0.5,p,1-p))*2,rate=1/scale) + location
+pdoublexp=function(q, location=0, scale=1) ifelse(q>location, 1-pexp(abs(q-location),rate=1/scale,lower.tail=FALSE)/2, pexp(abs(location-q),rate=1/scale,lower.tail=FALSE)/2)
+## check against rmulti::dlaplace etc
+#pdoublexp(c(-1,0,1,2,3), location=-1, scale=2);          plaplace(c(-1,0,1,2,3), m=-1, 2)
+#ddoublexp(c(-1,0,1,2,3), location=-1, scale=2);          dlaplace(c(-1,0,1,2,3), m=-1, 2)
+#qdoublexp(seq(0,1,by=0.1), location=-1, scale=2);      qlaplace(seq(0,1,by=0.1), m=-1, 2)
+#plot(density(rdoublexp(1e3, location=-1, scale=2))); lines(density(rlaplace(1e3, m=-1, 2)), col=2)
+
+
+rbidoublexp=function(n, loc.1, loc.2, scale.1, scale.2, rho) {
+    
+    # this seems to be necessary; otherwise linux installation complains about no def found for these functions
+    rdoublexp=function(n, location=0, scale=1) rexp(n,rate=1/scale)*(rbern(n,1/2)*2-1)+location
+    ddoublexp=function(x, location=0, scale=1) dexp(abs(x-location),rate=1/scale)/2
+    qdoublexp=function(p, location=0, scale=1) ifelse(p>0.5,1,-1)*qexp(1-(1-ifelse(p>0.5,p,1-p))*2,rate=1/scale) + location
+    pdoublexp=function(q, location=0, scale=1) ifelse(q>location, 1-pexp(abs(q-location),rate=1/scale,lower.tail=FALSE)/2, pexp(abs(location-q),rate=1/scale,lower.tail=FALSE)/2)
+    
+    myCop <- copula::normalCopula(param=rho)
+    myMvd <- copula::mvdc(copula=myCop, margins=c("doublexp", "doublexp"), paramMargins=list(list(location=loc.1, scale=scale.1), list(location=loc.2, scale=scale.2)))
+    dat <- (copula::rMvdc(n, myMvd))        
+}
+#x=rbidoublexp(100,0,1,1,1,.5)
+#plot(x[,1], x[,2])

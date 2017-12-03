@@ -2,7 +2,8 @@
 pair.wmw.test=function(X,Y
     , alternative = c("two.sided", "less", "greater"), correct = TRUE, perm=NULL, mc.rep=1e4
     , method=c("exact.2","large.0","large","exact","exact.0","exact.1","exact.3"), trace=0
-    , mode=c("test","var"), useC=TRUE)
+    , mode=c("test","var")
+    , useC=TRUE)
 {
     
     alternative <- match.arg(alternative)

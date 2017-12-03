@@ -265,12 +265,9 @@ SEXP pm_wmw_test(SEXP _X, SEXP _Y, SEXP _Z, SEXP _corr, SEXP _method, SEXP _mc_r
         //for (b=0; b<mc_rep; b++) PRINTF("%f ", ans[b]); PRINTF("\n");
     }
             
-    free(X); free(Y); free(xy); free(x1z);
-    free(unique); free(nties);
+    free(X); free(Y); free(xy); free(x1z); free(X1); free(Z); free(xz0); free(unique); free(nties); free(index); free(perm); 
 
     UNPROTECT(1);
     return _ans;
 }
-
-
 

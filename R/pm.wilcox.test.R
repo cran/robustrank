@@ -1,7 +1,7 @@
 # one sided p values are opposite to wilcox.test because the way U is computed here as the rank of Y's
 pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
     , alternative = c("two.sided", "less", "greater")
-    , method=c("SR-MW", "MW-MW", "all")
+    , method=c("SR-MW", "MW-MW", "all") # mw.mw.00 is BP
     , mode=c("test","var"), useC=FALSE, trace=0) 
 {
     
@@ -14,13 +14,11 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
     method=match.arg(method)
     mode <- match.arg(mode) 
     if (alternative!="two.sided" & method=="all") warning("only sr.mw.20 and mw.mw.20 implement one-sided alternative")
-    
+    stopifnot(length(Xpaired)==length(Ypaired))    
+        
     #because the statistic is a linear weighted combination of discrete statistics, whether to do continuity correction becomes quite complicated.
     # there are some remanants of code dealing with continuity correction, and they can be ignored
-    correct=FALSE# not implemented in compute.pm.wilcox.z yet
-    if(!correct) .corr=0 else .corr=switch(alternative, "two.sided" = 2, "greater" = -1, "less" = 1)     
-    
-    stopifnot(length(Xpaired)==length(Ypaired))    
+    correct=!useC# not implemented in .Call implemenation; partially implemented in R implementation
     
     # consolidate extra data if there are NA in paired data
     Yextra=c(Yextra,Ypaired[is.na(Xpaired)])
@@ -60,6 +58,8 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
     
     if(useC) {
         # only reutrn test statistic for mw.mw.20
+        if(!correct) .corr=0 else .corr=switch(alternative, "two.sided" = 2, "greater" = -1, "less" = 1)     
+        if(is.switched & abs(.corr)==1) .corr=-.corr
         z=.Call("pm_wmw_test", Xpaired, Ypaired, Yextra, .corr, as.integer(1), as.integer(1))
     } else {
         #the following R implementation may give a different result under i386 software on 64-bit machine, b/c C is always 64 bit, but R is 32 bit
@@ -89,8 +89,9 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
 
 compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct, is.switched, trace=1, return.all=FALSE) {
     
-    # correct is not really used for now, but kept the code for now
+    # .corr is for .Call call to compute variance of Up
     if(!correct) .corr=0 else .corr=switch(alternative, "two.sided" = 2, "greater" = -1, "less" = 1)     
+    if(is.switched & abs(.corr)==1) .corr=-.corr
     
     m=length(Xpaired)
     n=length(Yextra)
@@ -130,6 +131,7 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
     # Wilcoxon signed rank stat and var
     r.1 <- rank(abs.delta)    
     W.plus = mean(pos.delta*r.1)
+    if(correct) W.plus=W.plus-switch(alternative, "two.sided" = sign(W.plus-(m+1)/4) * 0.5/m, "greater" = ifelse(is.switched,-1,1)*0.5/m, "less" = -ifelse(is.switched,-1,1)*0.5/m)
     W.plus.2=mean(sgn.delta*r.1)
     var.W.plus = m * var(h.1) # var(W.plus.2) is 4 x var(W.plus)
     var.W.plus.0 = (m+1)*(2*m+1)/(24*m)
@@ -138,8 +140,9 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
     r.2 <- rank(c(Xpaired, Yextra))
     W.mw=sum(r.2[(m+1):N])/(N+1)
     var.W.mw=m * (alpha^2*var(Fyprime(Xpaired)) + alpha*(1-alpha)*var(Fx(Yextra)))
-    var.W.mw.0=m*n/(12*(N+1))
-        
+    var.W.mw.0=m*n/(12*(N+1))        
+    if(correct) W.mw=W.mw-switch(alternative, "two.sided" = sign(W.mw-n/2) * 0.5/(N+1), "greater" = ifelse(is.switched,-1,1)*0.5/(N+1), "less" = -ifelse(is.switched,-1,1)*0.5/(N+1))
+
     # covariance between W.plus and W.mw    
     cov. = -m*alpha * cov(h.1, Fy(Xpaired))
     rho=cov./sqrt(var.W.plus*var.W.mw)
@@ -155,7 +158,9 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
     
     # MW-MW1 and MW-MW2
     U.p=(sum(rank(c(Xpaired, Ypaired))[m+1:m]) - m*(m+1)/2)/(m*m)
+    if(correct) U.p=U.p-switch(alternative, "two.sided" = sign(U.p-0) * 0.5/(m*m), "greater" = ifelse(is.switched,-1,1)*0.5/(m*m), "less" = -ifelse(is.switched,-1,1)*0.5/(m*m))
     U.mw=(W.mw*(N+1)-n*(n+1)/2)/(m*n)
+    if(correct) U.mw=U.mw-switch(alternative, "two.sided" = sign(U.mw-0) * 0.5/(m*n), "greater" = ifelse(is.switched,-1,1)*0.5/(m*n), "less" = -ifelse(is.switched,-1,1)*0.5/(m*n))
     var.U.p.0=1/6-2*cov.G.F
     # more precise est of var.U.p.0
     var.U.p.0.high=m*((U.p-0.5)/.Call("pair_wmw_test", Xpaired, Ypaired, .corr, as.integer(2), as.integer(1), as.integer(1)))^2
@@ -194,13 +199,13 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
         tests=rbind(tests, "sr.mw.11"=c(stat.1, pval.1))
         
         # linear combination
-        comb=c(1, var.W.plus.0/var.W.mw.0)
-        if(trace) print(comb)
-        #stat.1 = (comb %*% vec)^2 / (comb %*% matrix(c(var.W.plus.0, cov.0, cov.0, var.W.mw.0),2) %*% comb)      
-        #tests=rbind(tests, "sr.mw.20"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
-        # use normal reference instead of chisq
+        df.=Inf # degrees of freedom for Student's t: m or Inf
+        comb=c(1, var.W.plus.0/var.W.mw.0); if(trace) print(comb)
         stat.1 = (comb %*% vec) / sqrt(comb %*% matrix(c(var.W.plus.0, cov.0, cov.0, var.W.mw.0),2) %*% comb)      
-        tests=rbind(tests, "sr.mw.20"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
+        tests=rbind(tests, "sr.mw.20"=c(stat.1, switch(alternative, "two.sided"=2*pt(abs(stat.1),df=df.,lower.tail=FALSE), 
+                                                                         "less"=pt(stat.1,df=df.,lower.tail=ifelse(!is.switched,FALSE,TRUE)), 
+                                                                      "greater"=pt(stat.1,df=df.,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
+        
         comb=c(1, var.W.plus/var.W.mw)
         stat.1 = (comb %*% vec)^2 / (comb %*% matrix(c(var.W.plus, cov., cov., var.W.mw),2) %*% comb)      
         tests=rbind(tests, "sr.mw.21"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
@@ -231,7 +236,7 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
         
         # linear combination
         comb.0=c(1, var.U.p.0/var.U.mw.0)
-        if(trace) print(comb.0)
+        if(trace) print(c(var.U.p.0, var.U.mw.0))
         #stat.1 = (comb.0 %*% vec)^2 / (comb.0 %*% matrix(c(var.U.p.0, cov.U.mw.p.0, cov.U.mw.p.0, var.U.mw.0),2) %*% comb.0)      
         #tests=rbind(tests, "mw.mw.20"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
         # use normal reference instead of chisq
@@ -254,7 +259,9 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
         # extension to having both Yextra and Xextra
         
         U.3=(sum(rank(c(Xextra, Ypaired))[lx+1:m]) - m*(m+1)/2)/(lx*m)
+        if(correct) U.3=U.3-switch(alternative, "two.sided" = sign(U.3-0) * 0.5/(m*lx), "greater" = 0.5/(m*lx), "less" = -0.5/(m*lx))
         U.4=(sum(rank(c(Xextra, Yextra))[lx+1:n]) - n*(n+1)/2)/(lx*n)
+        if(correct) U.4=U.4-switch(alternative, "two.sided" = sign(U.4-0) * 0.5/(n*lx), "greater" = 0.5/(n*lx), "less" = -0.5/(n*lx))
         
         ####################################################
         # SR-MW

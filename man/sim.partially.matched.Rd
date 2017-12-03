@@ -1,5 +1,6 @@
 \name{sim.partially.matched}
 \alias{r2sample}
+\alias{sim.paired.with.replicates}
 \alias{sim.partially.matched}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
@@ -11,10 +12,14 @@ r2sample is a wrapper for sim.partially.matched and generates indepenent two-sam
 }
 \usage{
 sim.partially.matched(m, n.x, n.y, 
-distr = c("normal", "logistic", "student", "mixnormal", "gamma"), params, seed)
+distr = c("normal","logistic","student","mixnormal","gamma","lognormal","beta",
+    "uniform","hybrid1","hybrid2","doublexp"), params, seed)
 
 r2sample(m, n, 
 distr = c("normal", "logistic", "student", "mixnormal"), params, seed)
+
+sim.paired.with.replicates(m, meanRatio, sdRatio, within.sd, type, hyp, distr, seed)
+
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -38,6 +43,21 @@ Named vector. See details.
 }
   \item{seed}{
 Seed for random number generator.
+}
+  \item{meanRatio}{
+%%     ~~Describe \code{meanRatio} here~~
+}
+  \item{sdRatio}{
+%%     ~~Describe \code{sdRatio} here~~
+}
+  \item{within.sd}{
+%%     ~~Describe \code{within.sd} here~~
+}
+  \item{type}{
+%%     ~~Describe \code{type} here~~
+}
+  \item{hyp}{
+%%     ~~Describe \code{hyp} here~~
 }
 }
 \details{
