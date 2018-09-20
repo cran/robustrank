@@ -8,10 +8,11 @@ Wilcoxon test for Partially Matched Two Sample Data
 Performs rank-based two sample test for partially matched two sample data by combining information from matched and unmatched data
 }
 \usage{
-pm.wilcox.test(Xpaired, Ypaired, Xextra = NULL, Yextra = NULL, 
-    alternative = c("two.sided", "less", "greater"), 
-    method = c("SR-MW", "MW-MW", "all"), 
-    mode = c("test", "var"), useC = FALSE, trace = 0)
+pm.wilcox.test(Xpaired, Ypaired, Xextra = NULL, Yextra = NULL,
+ alternative = c("two.sided", "less", "greater"),
+ method = c("SR-MW", "MW-MW", "all"), mode = c("test",
+ "var", "power.study"), useC = FALSE, correct = NULL,
+ verbose=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -39,8 +40,11 @@ String. Do not change it to var, for developpment only.
   \item{useC}{
 Boolean. Do not set it to TRUE, for development only.
 }
-  \item{trace}{
-%%     ~~Describe \code{trace} here~~
+  \item{verbose}{
+%%     ~~Describe \code{verbose} here~~
+}
+  \item{correct}{
+Continuity correction.
 }
 }
 \details{

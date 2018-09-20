@@ -82,7 +82,7 @@ static void getrank (int n, double data[], double rank[])
 
 // xy is passed in so that there is no need to allocate memory for getting rank
 // m=n
-double compute_pair_wmw_Z(double * X, double * Y, double * xy, int m, int n, int corr, int method, double adj) {
+double compute_pair_wmw_Z(double * X, double * Y, double * xy, int m, int n, int corr, int method, double adj, int return_var) {
 
     int i,j,k;
     int N=m+n;
@@ -91,6 +91,7 @@ double compute_pair_wmw_Z(double * X, double * Y, double * xy, int m, int n, int
     double A, B, C_1, v_f, A_0, B_0, C_1_0, v_f_0;
     double C_2_cov, C_2_cov_0, C_2_cov_1, C_2_var, C_2_var_0;
     double var_exact, var_exact_0, var_exact_1, var_exact_2, var_exact_3, var_large, var_large_0, var;
+    
     double *r=malloc(N*sizeof(double));
     double *Fy_X = malloc(m*sizeof(double));
     double *Fx_Y = malloc(n*sizeof(double));
@@ -104,9 +105,12 @@ double compute_pair_wmw_Z(double * X, double * Y, double * xy, int m, int n, int
     U=0;
     for (j = 0; j < n; j++) U+=r[m+j];    
     U=(U - n*(n+1.0)/2)/m/n;
+    double corr1;
     if(corr!=0) {
-        if(corr==2) corr=U>0.5?1:-1;        
-        U=U-corr*0.5/m/n;
+        if(corr==2) {
+            if(U==0.5) corr1=0; else corr1=U>0.5?1:-1;        
+        } else corr1=corr;
+        U=U-corr1*0.5/m/n;
     }
     //PRINTF("%f ", U); PRINTF("\n");
     
@@ -211,7 +215,7 @@ double compute_pair_wmw_Z(double * X, double * Y, double * xy, int m, int n, int
         default: var=0;
     }
     //if(method==0) var=var_large_0; else if (method==1) var=var_large; else if (method==2) var=var_exact_0; else if (method==3) var=var_exact; else if (method==4) var=var_exact_2; else if (method==5) var=var_exact_3; else var=0;//last one cannot happen
-    z=sqrt(m*1.)*(U-0.5)/sqrt(var);
+    if(return_var) z=var; else z=sqrt(m*1.)*(U-0.5)/sqrt(var); 
     //PRINTF("%f %f %f %f %f %f\n", a1, b1, a1/m/m + b1/n/n, - (m-(2*m+1)*mean_x+(N+1)*mean_x*mean_x)/m/n, mean_x, z);
   
 
@@ -222,7 +226,7 @@ double compute_pair_wmw_Z(double * X, double * Y, double * xy, int m, int n, int
     return z;
 }
 
-// remember only use sexp to return value
+// m and n should be the same. This code should be updated at some point.
 SEXP pair_wmw_test(SEXP _X, SEXP _Y, SEXP _corr, SEXP _method, SEXP _mc_rep, SEXP _comb){
     
     int m=length(_X);
@@ -273,7 +277,7 @@ SEXP pair_wmw_test(SEXP _X, SEXP _Y, SEXP _corr, SEXP _method, SEXP _mc_rep, SEX
 
 
     if(mc_rep==1) {
-        ans[0]=compute_pair_wmw_Z(X0, Y0, xy, m, n, corr, method, adj); 
+        ans[0]=compute_pair_wmw_Z(X0, Y0, xy, m, n, corr, method, adj, 0); 
     } else {
         if (mc_rep>1) {
             // Monte Carlo
@@ -283,7 +287,7 @@ SEXP pair_wmw_test(SEXP _X, SEXP _Y, SEXP _corr, SEXP _method, SEXP _mc_rep, SEX
                     X[i]=ind< 0.5?X0[i]:Y0[i];
                     Y[i]=ind>=0.5?X0[i]:Y0[i];
                 }
-                ans[b]=compute_pair_wmw_Z(X, Y, xy, m, n, corr, method, adj);        
+                ans[b]=compute_pair_wmw_Z(X, Y, xy, m, n, corr, method, adj, 0);        
             }    
         } else {
             // exact   
@@ -295,7 +299,7 @@ SEXP pair_wmw_test(SEXP _X, SEXP _Y, SEXP _corr, SEXP _method, SEXP _mc_rep, SEX
                     X[i]=ind==0?X0[i]:Y0[i];
                     Y[i]=ind==1?X0[i]:Y0[i];
                 }
-                ans[b]=compute_pair_wmw_Z(X, Y, xy, m, n, corr, method, adj);        
+                ans[b]=compute_pair_wmw_Z(X, Y, xy, m, n, corr, method, adj, 0);        
             }    
         }
         //for (b=0; b<mc_rep; b++) PRINTF("%f ", ans[b]); PRINTF("\n");
@@ -309,4 +313,23 @@ SEXP pair_wmw_test(SEXP _X, SEXP _Y, SEXP _corr, SEXP _method, SEXP _mc_rep, SEX
 }
 
 
+// return just var
+SEXP pair_wmw_var(SEXP _X, SEXP _Y, SEXP _method){
+    
+    int m=length(_X);
+    int n=length(_Y);
+    int method=asInteger(_method);// 0,1,2,3,4
+    double *X=REAL(_X), *Y=REAL(_Y);  
+      
+    SEXP _ans=PROTECT(allocVector(REALSXP, 1));
+    double *ans=REAL(_ans);
+    
+    double *xy = malloc((m+n)*sizeof(double));        
+    ans[0]=compute_pair_wmw_Z(X, Y, xy, m, n, 0, method, 0, 1); 
+    free(xy); 
+    //free(unique); free(nties);
+
+    UNPROTECT(1);
+    return _ans;
+}
 

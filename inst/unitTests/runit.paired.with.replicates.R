@@ -7,7 +7,7 @@ test.paired.with.replicates <- function() {
 RNGkind("Mersenne-Twister", "Inversion")
 tolerance=1e-3
 if(file.exists("C:/_checkReproducibility")) tolerance=1e-6
-trace=0
+verbose=FALSE
 
 dat=sim.paired.with.replicates(m=15, meanRatio=10, sdRatio=0, within.sd=.3, type=1, hyp=0, distr="logistic", seed=1)
 checkEqualsNumeric(abs(sum(unlist(dat))), 38.86667, tolerance=tolerance)

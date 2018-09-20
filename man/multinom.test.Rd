@@ -8,9 +8,11 @@ Multinom Test
 Perform multinom test.
 }
 \usage{
-multinom.test(X, Y, alternative = c("two.sided", "less", "greater"), correct = FALSE, 
-perm = NULL, mc.rep = 10000, method = c("exact.2", "large.0", "large", "exact", 
-    "exact.0", "exact.1", "exact.3"), trace = 0, mode = c("test", "var"), useC = TRUE)
+multinom.test(X, Y, alternative = c("two.sided", "less", "greater"),
+         correct = FALSE, perm = NULL, mc.rep = 10000, method =
+         c("exact.2", "large.0", "large", "exact", "exact.0",
+         "exact.1", "exact.3"), verbose = FALSE, mode =
+         c("test", "var"), useC = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -35,8 +37,8 @@ perm = NULL, mc.rep = 10000, method = c("exact.2", "large.0", "large", "exact",
   \item{method}{
 %%     ~~Describe \code{method} here~~
 }
-  \item{trace}{
-%%     ~~Describe \code{trace} here~~
+  \item{verbose}{
+%%     ~~Describe \code{verbose} here~~
 }
   \item{mode}{
 %%     ~~Describe \code{mode} here~~

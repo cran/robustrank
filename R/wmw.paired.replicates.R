@@ -1,7 +1,7 @@
-# X=dat$X; Y= dat$Y; useC=TRUE; alternative = "two.sided"; correct = FALSE; perm=TRUE; mc.rep=3; trace=1
+# X=dat$X; Y= dat$Y; useC=TRUE; alternative = "two.sided"; correct = FALSE; perm=TRUE; mc.rep=3; verbose=1
 wmw.paired.replicates.test=function(X,Y
     , alternative = c("two.sided", "less", "greater"), correct = FALSE, perm=NULL, mc.rep=1e4
-    , method=c("exact.2","large.0","large","exact","exact.0","exact.1","exact.3"), trace=0
+    , method=c("exact.2","large.0","large","exact","exact.0","exact.1","exact.3"), verbose=FALSE
     , mode=c("test","var")
     , useC=TRUE)
 {
@@ -40,7 +40,7 @@ wmw.paired.replicates.test=function(X,Y
         p.method="asymptotic" 
     }
     if(is.null(p.method)) p.method="Monte Carlo"
-    if(trace==1) print(p.method)
+    if(verbose) print(p.method)
     
     if (p.method=="asymptotic") {
        # one sided p values are opposite to wilcox.test because the way U is computed here as the rank of Y's

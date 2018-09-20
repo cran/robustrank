@@ -1,8 +1,16 @@
+# sr.mw.q0 is quadratic combination
+# sr.mw.l0 is linear combination
+# sr.mw.2 is linear combination with only independent statistics, with asymp-based p val
+# sr.mw.2.perm is linear combination with only independent statistics, but with permutation-based pval
+# mw.mw.00 is bp 
 # one sided p values are opposite to wilcox.test because the way U is computed here as the rank of Y's
 pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
     , alternative = c("two.sided", "less", "greater")
-    , method=c("SR-MW", "MW-MW", "all") # mw.mw.00 is BP
-    , mode=c("test","var"), useC=FALSE, trace=0) 
+    , method=c("SR-MW", "MW-MW", "all") 
+    , mode=c("test","var","power.study")
+    , useC=FALSE
+    , correct=NULL
+    , verbose=FALSE) 
 {
     
     DNAME1 = deparse(substitute(Xpaired))
@@ -13,12 +21,12 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
     alternative <- match.arg(alternative)
     method=match.arg(method)
     mode <- match.arg(mode) 
-    if (alternative!="two.sided" & method=="all") warning("only sr.mw.20 and mw.mw.20 implement one-sided alternative")
+    if (alternative!="two.sided" & method=="all") warning("only sr.mw.l0 and mw.mw.l0 implement one-sided alternative")
     stopifnot(length(Xpaired)==length(Ypaired))    
         
     #because the statistic is a linear weighted combination of discrete statistics, whether to do continuity correction becomes quite complicated.
     # there are some remanants of code dealing with continuity correction, and they can be ignored
-    correct=!useC# not implemented in .Call implemenation; partially implemented in R implementation
+    if (is.null(correct)) correct=!useC# not implemented in .Call implemenation; partially implemented in R implementation
     
     # consolidate extra data if there are NA in paired data
     Yextra=c(Yextra,Ypaired[is.na(Xpaired)])
@@ -32,7 +40,7 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
     # switch X and Y if Xextra is not null but Yextra is
     is.switched=FALSE
     if (length(Yextra)==0 & length(Xextra)>0) {
-        cat("switch two samples \n")
+        if(verbose) cat("switch two samples \n")
         tmp=Xpaired; Xpaired=Ypaired; Ypaired=tmp
         Yextra=Xextra
         Xextra=NULL
@@ -51,19 +59,24 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
     alpha=n/N
     beta=N/(m+N)
     
-    if(trace) print(m,n,lx)
+    power.study=mode=="power.study"
+    
+    if(verbose) myprint(m,n,lx)
     
     # for developing manuscript
-    if(mode=="var") return(compute.pm.wilcox.z(Xpaired,Ypaired,Xextra,Yextra, alternative, correct, is.switched, trace, return.all=TRUE)) 
+    if(mode=="var") return(compute.pm.wilcox.z(Xpaired,Ypaired,Xextra,Yextra, alternative, correct, is.switched, verbose, return.all=TRUE, power.study=power.study)) 
+    
+    # for power study
+    if(mode=="power.study") return(compute.pm.wilcox.z(Xpaired,Ypaired,Xextra,Yextra, alternative, correct, is.switched, verbose, return.all=FALSE, power.study=power.study)[,2]) 
     
     if(useC) {
-        # only reutrn test statistic for mw.mw.20
+        # only reutrn test statistic for mw.mw.l0
         if(!correct) .corr=0 else .corr=switch(alternative, "two.sided" = 2, "greater" = -1, "less" = 1)     
         if(is.switched & abs(.corr)==1) .corr=-.corr
         z=.Call("pm_wmw_test", Xpaired, Ypaired, Yextra, .corr, as.integer(1), as.integer(1))
     } else {
         #the following R implementation may give a different result under i386 software on 64-bit machine, b/c C is always 64 bit, but R is 32 bit
-        z=compute.pm.wilcox.z(Xpaired,Ypaired,Xextra,Yextra, alternative, correct, is.switched, trace, return.all=FALSE)
+        z=compute.pm.wilcox.z(Xpaired,Ypaired,Xextra,Yextra, alternative, correct, is.switched, verbose, return.all=FALSE, power.study=power.study)
     }        
     
     if(is.switched) z[,1]=-z[,1] #change the sign of statisitics
@@ -73,7 +86,7 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
         return (z)
     } else {
         # for practical uses
-        z.=switch(method, "SR-MW"=z["sr.mw.20",], "MW-MW"=z["mw.mw.20",])
+        z.=switch(method, "SR-MW"=z["sr.mw.l0",], "MW-MW"=z["mw.mw.l0",])
         res=list()
         class(res)=c("htest",class(res))
         res$statistic=z.[1]
@@ -87,7 +100,7 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
     
 }        
 
-compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct, is.switched, trace=1, return.all=FALSE) {
+compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct, is.switched, verbose=1, return.all=FALSE, power.study) {
     
     # .corr is for .Call call to compute variance of Up
     if(!correct) .corr=0 else .corr=switch(alternative, "two.sided" = 2, "greater" = -1, "less" = 1)     
@@ -158,13 +171,14 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
     
     # MW-MW1 and MW-MW2
     U.p=(sum(rank(c(Xpaired, Ypaired))[m+1:m]) - m*(m+1)/2)/(m*m)
-    if(correct) U.p=U.p-switch(alternative, "two.sided" = sign(U.p-0) * 0.5/(m*m), "greater" = ifelse(is.switched,-1,1)*0.5/(m*m), "less" = -ifelse(is.switched,-1,1)*0.5/(m*m))
+    if(correct) U.p=U.p-switch(alternative, "two.sided" = sign(U.p-0.5) * 0.5/(m*m), "greater" = ifelse(is.switched,-1,1)*0.5/(m*m), "less" = -ifelse(is.switched,-1,1)*0.5/(m*m))
     U.mw=(W.mw*(N+1)-n*(n+1)/2)/(m*n)
-    if(correct) U.mw=U.mw-switch(alternative, "two.sided" = sign(U.mw-0) * 0.5/(m*n), "greater" = ifelse(is.switched,-1,1)*0.5/(m*n), "less" = -ifelse(is.switched,-1,1)*0.5/(m*n))
-    var.U.p.0=1/6-2*cov.G.F
-    # more precise est of var.U.p.0
-    var.U.p.0.high=m*((U.p-0.5)/.Call("pair_wmw_test", Xpaired, Ypaired, .corr, as.integer(2), as.integer(1), as.integer(1)))^2
-    var.U.p.0=var.U.p.0.high
+    if(correct) U.mw=U.mw-switch(alternative, "two.sided" = sign(U.mw-0.5) * 0.5/(m*n), "greater" = ifelse(is.switched,-1,1)*0.5/(m*n), "less" = -ifelse(is.switched,-1,1)*0.5/(m*n))
+    
+    var.U.p.0=1/6-2*cov.G.F    
+    #var.U.p.0.high=m*((U.p-0.5)/.Call("pair_wmw_test", Xpaired, Ypaired, .corr, as.integer(2), as.integer(1), as.integer(1)))^2 # there is a bug here when .Call returns 0, keep here only for historic reasons
+    var.U.p.0.high=.Call("pair_wmw_var", Xpaired, Ypaired, as.integer(2))# a more precise est of var.U.p.0
+    var.U.p.0=var.U.p.0.high 
     var.U.mw.0=1/(12*alpha)
     cov.U.mw.p.0=1/12-cov.G.F
     var.U.p =  var(Fy(Xpaired)) + var(Fx(Ypaired)) - 2*cov.G.F
@@ -181,87 +195,91 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
     tests=NULL
     
     if (lx==0) {
-    
+        
         ####################################################
         # SR-MW tests, several versions of rho are tried
-        
+            
         vec=c(W.plus-(m+1)/4, W.mw-n/2)
-        
-        # quadratic combination
-        stat.1 = try(c(vec %*% solve(matrix(c(var.W.plus.0, cov.0, cov.0, var.W.mw.0),2) , vec)), silent=TRUE)  # solve may fail
-        if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
-        tests=rbind(tests, "sr.mw.10"=c(stat.1, pval.1)) #SR-MW$_{1}$    
-    #    stat.1 = try(c(vec %*% solve(matrix(c(var.W.plus.0, cov.0a, cov.0a, var.W.mw.0),2) , vec)), silent=TRUE)  # solve may fail
-    #    if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
-    #    tests=rbind(tests, "SR-MW.1a"=c(stat.1, pval.1))    
-        stat.1 = try(c(vec %*% solve(matrix(c(var.W.plus, cov., cov., var.W.mw),2) , vec)), silent=TRUE)  # solve may fail
-        if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
-        tests=rbind(tests, "sr.mw.11"=c(stat.1, pval.1))
-        
+            
+        if(!power.study) {
+            # quadratic combination
+            stat.1 = try(c(vec %*% solve(matrix(c(var.W.plus.0, cov.0, cov.0, var.W.mw.0),2) , vec)), silent=TRUE)  # solve may fail
+            if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
+            tests=rbind(tests, "sr.mw.q0"=c(stat.1, pval.1)) #SR-MW$_{1}$    
+        #    stat.1 = try(c(vec %*% solve(matrix(c(var.W.plus.0, cov.0a, cov.0a, var.W.mw.0),2) , vec)), silent=TRUE)  # solve may fail
+        #    if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
+        #    tests=rbind(tests, "SR-MW.1a"=c(stat.1, pval.1))    
+            stat.1 = try(c(vec %*% solve(matrix(c(var.W.plus, cov., cov., var.W.mw),2) , vec)), silent=TRUE)  # solve may fail
+            if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
+            tests=rbind(tests, "sr.mw.11"=c(stat.1, pval.1))
+            
+            comb=c(1, var.W.plus/var.W.mw)
+            stat.1 = (comb %*% vec)^2 / (comb %*% matrix(c(var.W.plus, cov., cov., var.W.mw),2) %*% comb)      
+            tests=rbind(tests, "sr.mw.21"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
+#            comb=(var.W.mw.0 - cov.0)/(var.W.plus.0 + var.W.mw.0 - 2*cov.0)
+#            comb=c(comb, 1-comb)
+#            stat.1 = (comb %*% vec) / sqrt(comb %*% matrix(c(var.W.plus.0, cov.0, cov.0, var.W.mw.0),2) %*% comb)      
+#            tests=rbind(tests, "sr.mw.22"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
+        }    
+            
         # linear combination
         df.=Inf # degrees of freedom for Student's t: m or Inf
-        comb=c(1, var.W.plus.0/var.W.mw.0); if(trace) print(comb)
+        comb=c(1, var.W.plus.0/var.W.mw.0); if(verbose) print(comb)
         stat.1 = (comb %*% vec) / sqrt(comb %*% matrix(c(var.W.plus.0, cov.0, cov.0, var.W.mw.0),2) %*% comb)      
-        tests=rbind(tests, "sr.mw.20"=c(stat.1, switch(alternative, "two.sided"=2*pt(abs(stat.1),df=df.,lower.tail=FALSE), 
+        tests=rbind(tests, "sr.mw.l0"=c(stat.1, switch(alternative, "two.sided"=2*pt(abs(stat.1),df=df.,lower.tail=FALSE), 
                                                                          "less"=pt(stat.1,df=df.,lower.tail=ifelse(!is.switched,FALSE,TRUE)), 
                                                                       "greater"=pt(stat.1,df=df.,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
-        
-        comb=c(1, var.W.plus/var.W.mw)
-        stat.1 = (comb %*% vec)^2 / (comb %*% matrix(c(var.W.plus, cov., cov., var.W.mw),2) %*% comb)      
-        tests=rbind(tests, "sr.mw.21"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
-#        comb=(var.W.mw.0 - cov.0)/(var.W.plus.0 + var.W.mw.0 - 2*cov.0)
-#        comb=c(comb, 1-comb)
-#        stat.1 = (comb %*% vec) / sqrt(comb %*% matrix(c(var.W.plus.0, cov.0, cov.0, var.W.mw.0),2) %*% comb)      
-#        tests=rbind(tests, "sr.mw.22"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
-        
-        
+            
         ####################################################
         # MW-MW tests
             
-    #    stat.1 = (T-N/2)^2/var.T.0
-    #    tests=rbind(tests, "mw.mw.00"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
-    #        
-    #    stat.1 = (T-N/2)^2/var.T
-    #    tests=rbind(tests, "mw.mw.01"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
+        #    stat.1 = (T-N/2)^2/var.T.0
+        #    tests=rbind(tests, "mw.mw.00"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
+        #        
+        #    stat.1 = (T-N/2)^2/var.T
+        #    tests=rbind(tests, "mw.mw.01"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
             
         vec=sqrt(m)*c(U.p-1/2, U.mw-1/2)    
         
-        # quadratic combination
-        stat.1 = try(c(vec %*% solve(matrix(c(var.U.p.0, cov.U.mw.p.0, cov.U.mw.p.0, var.U.mw.0),2) , vec)), silent=TRUE)  # solve may fail
-        if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
-        tests=rbind(tests, "mw.mw.10"=c(stat.1, pval.1))    
-        stat.1 = try(c(vec %*% solve(matrix(c(var.U.p, cov.U.mw.p, cov.U.mw.p, var.U.mw),2) , vec)), silent=TRUE)  # solve may fail
-        if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
-        tests=rbind(tests, "mw.mw.11"=c(stat.1, pval.1))
+        if(!power.study) {
+            # quadratic combination
+            stat.1 = try(c(vec %*% solve(matrix(c(var.U.p.0, cov.U.mw.p.0, cov.U.mw.p.0, var.U.mw.0),2) , vec)), silent=TRUE)  # solve may fail
+            if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
+            tests=rbind(tests, "mw.mw.q0"=c(stat.1, pval.1))    
+            stat.1 = try(c(vec %*% solve(matrix(c(var.U.p, cov.U.mw.p, cov.U.mw.p, var.U.mw),2) , vec)), silent=TRUE)  # solve may fail
+            if (inherits(stat.1, "try-error")) stat.1<-pval.1<-NA else pval.1=pchisq(stat.1, df=2, lower.tail=FALSE)
+            tests=rbind(tests, "mw.mw.11"=c(stat.1, pval.1))
         
+            comb.1=c(1, var.U.p/var.U.mw)
+            stat.1 = (comb.1 %*% vec)^2 / (comb.1 %*% matrix(c(var.U.p, cov.U.mw.p, cov.U.mw.p, var.U.mw),2) %*% comb.1)      
+            tests=rbind(tests, "mw.mw.21"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
+            #myprint(U.p, U.mw, comb.0, comb.1, digits=6)
+        
+            # Brunner and Puri
+            comb=c(1, n/m)
+            stat.1 = (comb %*% vec)^2 / (comb %*% matrix(c(var.U.p.0, cov.U.mw.p.0, cov.U.mw.p.0, var.U.mw.0),2) %*% comb)      
+            tests=rbind(tests, "mw.mw.00"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
+            comb=c(1, n/m)
+            stat.1 = (comb %*% vec)^2 / (comb %*% matrix(c(var.U.p, cov.U.mw.p, cov.U.mw.p, var.U.mw),2) %*% comb)      
+            tests=rbind(tests, "mw.mw.01"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
+        }
+                
         # linear combination
         comb.0=c(1, var.U.p.0/var.U.mw.0)
-        if(trace) print(c(var.U.p.0, var.U.mw.0))
+        if(verbose) print(c(var.U.p.0, var.U.mw.0))
         #stat.1 = (comb.0 %*% vec)^2 / (comb.0 %*% matrix(c(var.U.p.0, cov.U.mw.p.0, cov.U.mw.p.0, var.U.mw.0),2) %*% comb.0)      
-        #tests=rbind(tests, "mw.mw.20"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
+        #tests=rbind(tests, "mw.mw.l0"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
         # use normal reference instead of chisq
         stat.1 = (comb.0 %*% vec) / sqrt(comb.0 %*% matrix(c(var.U.p.0, cov.U.mw.p.0, cov.U.mw.p.0, var.U.mw.0),2) %*% comb.0)      
-        tests=rbind(tests, "mw.mw.20"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
-        comb.1=c(1, var.U.p/var.U.mw)
-        stat.1 = (comb.1 %*% vec)^2 / (comb.1 %*% matrix(c(var.U.p, cov.U.mw.p, cov.U.mw.p, var.U.mw),2) %*% comb.1)      
-        tests=rbind(tests, "mw.mw.21"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
-        #myprint(U.p, U.mw, comb.0, comb.1, digits=6)
-        
-        # Brunner and Puri
-        comb=c(1, n/m)
-        stat.1 = (comb %*% vec)^2 / (comb %*% matrix(c(var.U.p.0, cov.U.mw.p.0, cov.U.mw.p.0, var.U.mw.0),2) %*% comb)      
-        tests=rbind(tests, "mw.mw.00"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
-        comb=c(1, n/m)
-        stat.1 = (comb %*% vec)^2 / (comb %*% matrix(c(var.U.p, cov.U.mw.p, cov.U.mw.p, var.U.mw),2) %*% comb)      
-        tests=rbind(tests, "mw.mw.01"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
-    
+        tests=rbind(tests, "mw.mw.l0"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
+            
     } else {        
         # extension to having both Yextra and Xextra
         
         U.3=(sum(rank(c(Xextra, Ypaired))[lx+1:m]) - m*(m+1)/2)/(lx*m)
-        if(correct) U.3=U.3-switch(alternative, "two.sided" = sign(U.3-0) * 0.5/(m*lx), "greater" = 0.5/(m*lx), "less" = -0.5/(m*lx))
+        if(correct) U.3=U.3-switch(alternative, "two.sided" = sign(U.3-0.5) * 0.5/(m*lx), "greater" = 0.5/(m*lx), "less" = -0.5/(m*lx))
         U.4=(sum(rank(c(Xextra, Yextra))[lx+1:n]) - n*(n+1)/2)/(lx*n)
-        if(correct) U.4=U.4-switch(alternative, "two.sided" = sign(U.4-0) * 0.5/(n*lx), "greater" = 0.5/(n*lx), "less" = -0.5/(n*lx))
+        if(correct) U.4=U.4-switch(alternative, "two.sided" = sign(U.4-0.5) * 0.5/(n*lx), "greater" = 0.5/(n*lx), "less" = -0.5/(n*lx))
         
         ####################################################
         # SR-MW
@@ -276,13 +294,21 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
         
         # linear combination
         comb=1/diag(v.tmp)
-        if(trace) print(comb)
+        if(verbose) {
+            cat("SR: comb\n"); print(comb)
+            cat("v.tmp\n"); print(v.tmp)
+        }
         #stat.1 = (comb %*% vec)^2 / (comb %*% v.tmp %*% comb)      
-        #tests=rbind(tests, "sr.mw.20"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
+        #tests=rbind(tests, "sr.mw.l0"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
         # use normal reference instead of chisq
         stat.1 = (comb %*% vec) / sqrt(comb %*% v.tmp %*% comb)      
-        tests=rbind(tests, "sr.mw.20"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
+        tests=rbind(tests, "sr.mw.l0"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
         
+        # linear combination of X-Y and X'-Y' comparisons only
+        comb=c(1/v.tmp[1,1], 0, 0, 1/v.tmp[4,4])
+        stat.1 = (comb %*% vec) / sqrt(comb %*% v.tmp %*% comb)      
+        tests=rbind(tests, "sr.mw.2"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))        
+            
         ####################################################
         # MW-MW    
         vec=sqrt(m)*c(U.p-1/2, U.mw-1/2, U.3-1/2, U.4-1/2)            
@@ -296,17 +322,33 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
     
         # linear combination
         comb=1/diag(v.tmp)
-        if(trace) print(comb)
+        if(verbose) {
+            cat("MW: comb\n"); print(comb)
+            cat("v.tmp\n"); print(v.tmp)
+        }
         #stat.1 = (comb %*% vec)^2 / (comb %*% v.tmp %*% comb)      
-        #tests=rbind(tests, "mw.mw.20"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
+        #tests=rbind(tests, "mw.mw.l0"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))
         # use normal reference instead of chisq
         stat.1 = (comb %*% vec) / sqrt(comb %*% v.tmp %*% comb)      
-        tests=rbind(tests, "mw.mw.20"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
+        tests=rbind(tests, "mw.mw.l0"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))
     
-        # Brunner and Puri
-        comb=1/diag(v.tmp); comb[1]=1/(1/6)
-        stat.1 = (comb %*% vec)^2 / (comb %*% v.tmp %*% comb)      
-        tests=rbind(tests, "mw.mw.00"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
+        # linear combination of X-Y and X'-Y' comparisons only
+        #myprint(U.p, U.4)
+        comb=c(1/v.tmp[1,1], 0, 0, 1/v.tmp[4,4])
+        stat.1 = (comb %*% vec) / sqrt(comb %*% v.tmp %*% comb)   
+        tests=rbind(tests, "mw.mw.2"=c(stat.1, switch(alternative, "two.sided"=2*pnorm(abs(stat.1),lower.tail=FALSE), "less"=pnorm(stat.1,lower.tail=ifelse(!is.switched,FALSE,TRUE)), "greater"=pnorm(stat.1,lower.tail=ifelse(!is.switched,TRUE,FALSE)))  ))        
+        if(!power.study) {
+            # perm utation-based p val
+            tmp=mw.mw.2.perm(Xpaired, Ypaired, Xextra, Yextra, .corr)
+            tests=rbind(tests, "mw.mw.2.perm"=c(tmp$stat, tmp$p.val))
+        }
+        
+        if(!power.study) {
+            # Brunner and Puri
+            comb=1/diag(v.tmp); comb[1]=1/(1/6)
+            stat.1 = (comb %*% vec)^2 / (comb %*% v.tmp %*% comb)      
+            tests=rbind(tests, "mw.mw.00"=c(stat.1, pchisq(stat.1, df=1, lower.tail=FALSE)))    
+        }
     }        
     
     if(!return.all) 
@@ -316,7 +358,6 @@ compute.pm.wilcox.z=function(Xpaired,Ypaired,Xextra,Yextra, alternative, correct
                  U.p=sqrt(m)*U.p, U.mw=sqrt(m)*U.mw, var.U.mw.0=var.U.mw.0, var.U.p.0=var.U.p.0, cov.U.mw.p.0=cov.U.mw.p.0 ))
     
 }
-
 
 # naively or simply combining sign test with MW, treat the two as independent
 part.naive=function(Xpaired,Ypaired,Xprime){

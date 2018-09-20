@@ -1,6 +1,6 @@
 # mode: var is used to examine variance estimators, test is used to perform testing
 # comb2: use combine to compute stat, use wmw to compute permutation distribution
-mod.wmw.test=function(X,Y, alternative = c("two.sided", "less", "greater"), correct = TRUE, perm=NULL, mc.rep=1e4, method=c("combine","comb2","fp","wmw","fplarge","nsm3"), trace=0 
+mod.wmw.test=function(X,Y, alternative = c("two.sided", "less", "greater"), correct = TRUE, perm=NULL, mc.rep=1e4, method=c("combine","comb2","fp","wmw","fplarge","nsm3"), verbose=FALSE 
     , mode=c("test","var"), useC=TRUE # develeopment parameters
 ) {
     
@@ -36,7 +36,7 @@ mod.wmw.test=function(X,Y, alternative = c("two.sided", "less", "greater"), corr
     if(is.null(p.method)) {
         if (choose(N,m)<=mc.rep) p.method="exact" else p.method="Monte Carlo"
     }
-    if(trace==1) print(p.method)
+    if(verbose) print(p.method)
     
     if (p.method=="asymptotic") {
        # one sided p values are opposite to wilcox.test because the way U is computed here as the rank of Y's
@@ -59,7 +59,7 @@ mod.wmw.test=function(X,Y, alternative = c("two.sided", "less", "greater"), corr
                     tmp
                 })
             }
-            print(sort(z.mc))
+            #print(sort(z.mc))
 ## numerical instability
 #t=2075
 #print((z-z.mc[t]))

@@ -8,10 +8,11 @@ WMW test for paired data
 Performs a WMW-type test of the strong null for paired data.
 }
 \usage{
-pair.wmw.test(X,Y
-, alternative = c("two.sided", "less", "greater"), correct = TRUE, perm=NULL, mc.rep=1e4
-, method=c("exact.2","large.0","large","exact","exact.0","exact.1","exact.3"), trace=0
-, mode=c("test","var"), useC=TRUE)
+pair.wmw.test(X, Y, alternative = c("two.sided", "less", "greater"),
+ correct = TRUE, perm = NULL, mc.rep = 10000, method =
+ c("exact.2", "large.0", "large", "exact", "exact.0",
+ "exact.1", "exact.3"), verbose = FALSE, mode =
+ c("test", "var"), p.method = NULL, useC = TRUE)
 }
 \arguments{
   \item{X}{
@@ -35,7 +36,7 @@ Number of Monte Carlo replicates for permutation test.
   \item{method}{
 Choices of test statistics.
 }
-  \item{trace}{
+  \item{verbose}{
 Print debug message when positive.
 }
   \item{mode}{
@@ -43,6 +44,9 @@ For development used.
 }
   \item{useC}{
 For development used.
+}
+  \item{p.method}{
+Method for obtaining p values.
 }
 }
 \details{
@@ -60,7 +64,7 @@ Under prep.
 
 dat=sim.partially.matched(m=15,n.x=0,n.y=20,distr="mixnormal",params=c(p.1=0.3,p.2=0.3),seed=1)
 X=dat$X; Y=dat$Y
-pair.wmw.test(X, Y, perm=TRUE,  method="large.0", trace=1)
-pair.wmw.test(X, Y, perm=FALSE, method="large.0", trace=1)
+pair.wmw.test(X, Y, perm=TRUE,  method="large.0", verbose=1)
+pair.wmw.test(X, Y, perm=FALSE, method="large.0", verbose=1)
 
 }

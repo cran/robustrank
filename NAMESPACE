@@ -1,6 +1,6 @@
 useDynLib(robustrank, .registration = TRUE)
 
-export(mod.wmw.test, pair.wmw.test, sim.partially.matched, r2sample, pm.wilcox.test, sim.paired.with.replicates, multinom.test, wmw.paired.replicates.test)
+export(mod.wmw.test, pair.wmw.test, sim.partially.matched, r2sample, pm.wilcox.test, sim.paired.with.replicates, multinom.test, wmw.paired.replicates.test, mw.mw.2.perm, choose.test)
 
 import(kyotil)
 
@@ -9,3 +9,4 @@ import(kyotil)
              "rgamma", "rlogis", "rmultinom", "rnorm", "runif",
              "uniroot", "var", "wilcox.test")
   importFrom("utils", "combn")
+importFrom("stats", "cor", "sd")

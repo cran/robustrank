@@ -1,9 +1,12 @@
-# method="large.0"; perm=T; alternative = "two.sided"; correct=T; mc.rep=1e4; trace=1; mode="test"; useC=T; 
+# method="large.0"; perm=T; alternative = "two.sided"; correct=T; mc.rep=1e4; verbose=1; mode="test"; useC=T; 
 pair.wmw.test=function(X,Y
-    , alternative = c("two.sided", "less", "greater"), correct = TRUE, perm=NULL, mc.rep=1e4
-    , method=c("exact.2","large.0","large","exact","exact.0","exact.1","exact.3"), trace=0
+    , alternative = c("two.sided", "less", "greater") 
+    , correct = TRUE, perm=NULL, mc.rep=1e4
+    , method=c("exact.2","large.0","large","exact","exact.0","exact.1","exact.3")
+    , verbose=FALSE
     , mode=c("test","var")
-    , useC=TRUE)
+    , p.method=NULL # asymptotic, exact, Monte Carlo
+    , useC=TRUE) 
 {
     
     alternative <- match.arg(alternative)
@@ -30,15 +33,16 @@ pair.wmw.test=function(X,Y
         z=compute.pair.wmw.Z(X,Y, alternative, correct, method); 
     }        
         
-        
-    p.method=NULL # asymptotic, exact, Monte Carlo
-    if(is.null(perm)) {
-        if (min(m,n)>=50) p.method="asymptotic" 
-    } else if (!perm) {
-        p.method="asymptotic" 
+            
+    if(is.null(p.method)) {
+        if(is.null(perm)) {
+            if (min(m,n)>=50) p.method="asymptotic" 
+        } else if (!perm) {
+            p.method="asymptotic" 
+        }
+        if(is.null(p.method)) p.method=ifelse(2^m<=mc.rep, "exact", "Monte Carlo")
     }
-    if(is.null(p.method)) p.method=ifelse(2^m<=mc.rep, "exact", "Monte Carlo")
-    if(trace==1) print(p.method)
+    if(verbose) print(p.method)
     
     if (p.method=="asymptotic") {
        # one sided p values are opposite to wilcox.test because the way U is computed here as the rank of Y's
@@ -96,7 +100,12 @@ pair.wmw.test=function(X,Y
         )
     }
     
-    pval
+    res=list()
+    class(res)=c("htest",class(res))
+    res$statistic=z
+    res$p.value=pval
+    res$alternative=alternative
+    return(res)
 }
 
 # R implementation, for debugging use
@@ -117,6 +126,7 @@ compute.pair.wmw.Z=function(X,Y, alternative, correct, method, return.all=FALSE)
     
     r <- rank(c(X, Y))
     U=(sum(r[m+1:n]) - n*(n+1)/2) /m/n    
+    print(U)
     correction <- switch(alternative,
        "two.sided" = sign(U-0.5) * 0.5/m/n,
        "greater" = 0.5/m/n,
