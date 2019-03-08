@@ -3,6 +3,7 @@ library("robustrank")
 
 test.pm <- function() {
 
+  suppressWarnings(RNGversion("3.5.0"))
 RNGkind("Mersenne-Twister", "Inversion")
 tolerance=1e-3
 if(file.exists("C:/_checkReproducibility")) tolerance=1e-6

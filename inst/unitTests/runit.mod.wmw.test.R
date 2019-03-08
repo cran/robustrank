@@ -1,5 +1,6 @@
 test.mod.wmw.test <- function() {
 
+  suppressWarnings(RNGversion("3.5.0"))
 library("RUnit")
 library("robustrank")
 RNGkind("Mersenne-Twister", "Inversion")
