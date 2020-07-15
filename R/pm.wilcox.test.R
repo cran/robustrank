@@ -1,3 +1,4 @@
+#Xextra=NULL; Yextra=NULL; alternative = "two.sided"; method="SR-MW"; mode="test"; useC=FALSE; correct=NULL; verbose=FALSE
 # sr.mw.q0 is quadratic combination
 # sr.mw.l0 is linear combination
 # sr.mw.2 is linear combination with only independent statistics, with asymp-based p val
@@ -48,8 +49,23 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
     }    
     
     if (length(Xextra)<=0 & length(Yextra)<=0) {
-        cat("call wilcox.test since there are no unpaired samples\n")
+        cat("call wilcox.test for paired data since there are no unpaired samples\n")
         return(wilcox.test(Xpaired, Ypaired, paired=TRUE))
+    } 
+    if (length(Xpaired)==0 & length(Ypaired)==0) {
+        cat("call wilcox.test for unpaired data since there are no paired samples\n")
+        return(wilcox.test(Xextra, Yextra, paired=FALSE))
+    } 
+    if (length(Xpaired)==1 & length(Ypaired)==1) {
+        cat(paste0("call wilcox.test for unpaired data since there is only 1 pair of matched samples by dropping 1 ", ifelse(length(Xextra)>length(Yextra), "X","Y") ,"\n"))
+        if(length(Xextra)>length(Yextra)) {
+            Yextra=c(Yextra,Ypaired)
+        } else {
+            Xextra=c(Xextra,Xpaired)
+        }
+        res=wilcox.test(Xextra, Yextra, paired=FALSE)
+        res$sample.size=c(X=length(Xextra), Y=length(Yextra))        
+        return(res)
     } 
     
     m=length(Xpaired)
@@ -91,6 +107,7 @@ pm.wilcox.test = function(Xpaired, Ypaired, Xextra=NULL, Yextra=NULL
         class(res)=c("htest",class(res))
         res$statistic=z.[1]
         names(res$statistic)="Z"
+        res$sample.size=c(paired=m, x.extra=length(Xextra), y.extra=length(Yextra))
         res$p.value=z.[2]
         res$alternative=alternative
         res$method=switch(method, "SR-MW"="SR-MW, weighted linear combination", "MW-MW"="MW-MW, weighted linear combination")

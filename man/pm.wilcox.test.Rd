@@ -68,4 +68,17 @@ pm.wilcox.test(X,Y)
 wilcox.test(X,Y,paired=TRUE)
 wilcox.test(X,Y,paired=FALSE)# often a conservative test due to the correlation
 
+# no paired data
+Y1=Y
+Y1[11:20]=NA
+pm.wilcox.test(X,Y1)
+# should match the following
+wilcox.test(X,Y1,paired=FALSE)
+
+# only 1 pair of matched data
+Y1=Y
+Y1[12:20]=NA
+pm.wilcox.test(X,Y1)
+
+
 }

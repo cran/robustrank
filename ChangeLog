@@ -1,12 +1,17 @@
 2017 07-24 
-	* updated runit.partiallymatched.R due to continuity correction
-	implemenation changes
+    * updated runit.partiallymatched.R due to continuity correction
+    implemenation changes
 
 2017 07-24 
-	* fixed a bug related to continuity correction in pm.wilcox.test related
-	to U.mw, U.p, U.3 and U.4
+    * fixed a bug related to continuity correction in pm.wilcox.test related
+    to U.mw, U.p, U.3 and U.4
 
 2018 09-19
-	* add two new tests MW-MW_2 and SR-MW_2
-	* add choose.test to help practitioners choose best methods
-	
+    * add two new tests MW-MW_2 and SR-MW_2
+    * add choose.test to help practitioners choose best methods
+    
+2019-09-10
+    * Modify pm.wilcox.test to handle the scenarios when there are no paired data or when there is only one pair of matched data
+
+2019-12-10
+    * Remove PKG_*FLAGS from Makefiles.win
