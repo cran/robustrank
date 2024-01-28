@@ -182,7 +182,8 @@ double compute_pair_wmw_Z(double * X, double * Y, double * xy, int m, int n, int
     //PRINTF("%f %f %f \n", tmp_4, theta, C_2_cov);
         
     //tao=mean(Y>X)
-    for(i = 0;i < m;i++) tao+=Y[i]>X[i]; tao/=m;
+    for(i = 0;i < m;i++) tao+=Y[i]>X[i]; 
+    tao/=m;
     A  =m*        tao*(1-tao);
     B  =m*(m-1)*  (tmp_1 - tao*theta + tmp_2 - tao*theta) ;
     C_1=m*(m-1)*  (theta*(1-theta)  + (tmp_3 - theta*theta));

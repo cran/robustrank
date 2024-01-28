@@ -386,36 +386,36 @@ part.naive=function(Xpaired,Ypaired,Xprime){
     partial.p.1 = pchisq(qnorm(test.1$p.val)**2 + qnorm(test.2$p.val)**2, df=2, lower.tail=FALSE)                
 }
 
-sign.mw.test = function(Xpaired, Ypaired, Z) {    
-    
-    stopifnot(length(Xpaired)==length(Ypaired))
-    m=length(Xpaired)
-    n=length(Z)
-    N=m+n
-    
-    # a signed test for the paired data
-    t.1=mean(Xpaired>Ypaired)    
-    if (t.1==0) t.1=t.1+.5/m else if (t.1==1) t.1=t.1-.5/m # continuity correction
-    var.t.1=t.1 * (1-t.1) / m
-    var.t.1
-    
-    r <- rank(c(Ypaired, Z))
-    t.2=(sum(r[(n+1):N]) - m*(m+1)/2)/n/m # U or AUC
-    if (t.2==0) t.2=t.2+.5/n/m else if (t.2==1) t.2=t.2-.5/n/m
-    Fy=ecdf(Ypaired)
-    Fz=ecdf(Z)
-    var.t.2=var(Fz(Ypaired))/n + var(Fy(Z))/m
-    
-    # covariance
-    cov.1.2=1/m* {mean (outer(1:n, 1:m, function (i,j) as.integer(Z[i]>Ypaired[j]) * as.integer(Xpaired[j]>Ypaired[j]) )) - mean (outer(1:n, 1:m, function (i,j) as.integer(Z[i]>Ypaired[j]) )) * t.1}
-    
-    # var matrix
-    Sigma=matrix(c(var.t.1,cov.1.2,cov.1.2,var.t.2),2,2)
-    # p-value
-    pval=try(pchisq(c(c(t.1-0.5, t.2-0.5) %*% solve(Sigma, c(t.1-0.5, t.2-0.5))), df=2, lower.tail=FALSE))
-    ifelse (inherits(pval, "try-error"), NA, pval)
-    
-}
+# sign.mw.test = function(Xpaired, Ypaired, Z) {    
+#     
+#     stopifnot(length(Xpaired)==length(Ypaired))
+#     m=length(Xpaired)
+#     n=length(Z)
+#     N=m+n
+#     
+#     # a signed test for the paired data
+#     t.1=mean(Xpaired>Ypaired)    
+#     if (t.1==0) t.1=t.1+.5/m else if (t.1==1) t.1=t.1-.5/m # continuity correction
+#     var.t.1=t.1 * (1-t.1) / m
+#     var.t.1
+#     
+#     r <- rank(c(Ypaired, Z))
+#     t.2=(sum(r[(n+1):N]) - m*(m+1)/2)/n/m # U or AUC
+#     if (t.2==0) t.2=t.2+.5/n/m else if (t.2==1) t.2=t.2-.5/n/m
+#     Fy=ecdf(Ypaired)
+#     Fz=ecdf(Z)
+#     var.t.2=var(Fz(Ypaired))/n + var(Fy(Z))/m
+#     
+#     # covariance
+#     cov.1.2=1/m* {mean (outer(1:n, 1:m, function (i,j) as.integer(Z[i]>Ypaired[j]) * as.integer(Xpaired[j]>Ypaired[j]) )) - mean (outer(1:n, 1:m, function (i,j) as.integer(Z[i]>Ypaired[j]) )) * t.1}
+#     
+#     # var matrix
+#     Sigma=matrix(c(var.t.1,cov.1.2,cov.1.2,var.t.2),2,2)
+#     # p-value
+#     pval=try(pchisq(c(c(t.1-0.5, t.2-0.5) %*% solve(Sigma, c(t.1-0.5, t.2-0.5))), df=2, lower.tail=FALSE))
+#     ifelse (inherits(pval, "try-error"), NA, pval)
+#     
+# }
 
 mw.mw.test=function(Xpaired,Ypaired,Yextra) {
     

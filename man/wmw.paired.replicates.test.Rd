@@ -17,33 +17,33 @@ wmw.paired.replicates.test(X, Y, alternative = c("two.sided", "less", "greater")
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X}{
-%%     ~~Describe \code{X} here~~
+X
 }
   \item{Y}{
-%%     ~~Describe \code{Y} here~~
+Y
 }
   \item{alternative}{
-%%     ~~Describe \code{alternative} here~~
+alternative
 }
   \item{correct}{
-%%     ~~Describe \code{correct} here~~
+correct
 }
   \item{perm}{
-%%     ~~Describe \code{perm} here~~
+perm
 }
   \item{mc.rep}{
-%%     ~~Describe \code{mc.rep} here~~
+mc.rep
 }
   \item{method}{
-%%     ~~Describe \code{method} here~~
+method
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+verbose
 }
   \item{mode}{
-%%     ~~Describe \code{mode} here~~
+mode
 }
   \item{useC}{
-%%     ~~Describe \code{useC} here~~
+useC
 }
 }

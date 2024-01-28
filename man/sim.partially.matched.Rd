@@ -45,19 +45,19 @@ Named vector. See details.
 Seed for random number generator.
 }
   \item{meanRatio}{
-%%     ~~Describe \code{meanRatio} here~~
+meanRatio
 }
   \item{sdRatio}{
-%%     ~~Describe \code{sdRatio} here~~
+sdRatio
 }
   \item{within.sd}{
-%%     ~~Describe \code{within.sd} here~~
+within.sd
 }
   \item{type}{
-%%     ~~Describe \code{type} here~~
+type
 }
   \item{hyp}{
-%%     ~~Describe \code{hyp} here~~
+hyp
 }
 }
 \details{

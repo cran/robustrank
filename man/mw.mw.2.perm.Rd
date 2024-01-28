@@ -14,27 +14,27 @@ mw.mw.2.perm(X, Y, Xprime, Yprime, .corr, mc.rep = 10000,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X}{
-%%     ~~Describe \code{X} here~~
+X
 }
   \item{Y}{
-%%     ~~Describe \code{Y} here~~
+Y
 }
   \item{Xprime}{
-%%     ~~Describe \code{Xprime} here~~
+Xprime
 }
   \item{Yprime}{
-%%     ~~Describe \code{Yprime} here~~
+Yprime
 }
   \item{.corr}{
-%%     ~~Describe \code{.corr} here~~
+.corr
 }
   \item{mc.rep}{
-%%     ~~Describe \code{mc.rep} here~~
+mc.rep
 }
   \item{alternative}{
-%%     ~~Describe \code{alternative} here~~
+alternative
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+verbose
 }
 }

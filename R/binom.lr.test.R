@@ -46,7 +46,7 @@ binom.lr.test=function(a,b,m,n, useC=FALSE, verbose=FALSE, mc.rep=1e4) {
     } else if (p.method=="Monte Carlo") {
         #### save rng state before set.seed in order to restore before exiting this function
         save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
-        if (class(save.seed)=="try-error") { set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }                        
+        if (inherits(save.seed,"try-error")) { set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }                        
     
         set.seed(1)
         if(useC) {

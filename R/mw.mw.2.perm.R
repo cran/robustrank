@@ -23,8 +23,8 @@ mw.mw.2.perm=function(X, Y, Xprime, Yprime, .corr, mc.rep=1e4, alternative = c("
     } else if (p.method=="Monte Carlo") {
         #### save rng state before set.seed in order to restore before exiting this function
         save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
-        if (class(save.seed)=="try-error") { set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }                        
-    
+        if (inherits(save.seed,"try-error")) { set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }                        
+        
         set.seed(1)
         z.mc=.Call("mw_mw_2_perm", X, Y, Xprime, Yprime, .corr, as.integer(mc.rep), as.integer(1), as.integer(1))
      }           

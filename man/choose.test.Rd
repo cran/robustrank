@@ -1,6 +1,5 @@
 \name{choose.test}
 \alias{choose.test}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Make Recommendations on the Most Powerful Test to Use
 }
@@ -10,22 +9,21 @@ Performs simulations to compare the power of different tests
 \usage{
 choose.test(Xpaired, Ypaired, Xextra = NULL, Yextra = NULL, mc.rep = 1000)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{Xpaired}{
-%%     ~~Describe \code{Xpaired} here~~
+Xpaired
 }
   \item{Ypaired}{
-%%     ~~Describe \code{Ypaired} here~~
+Ypaired
 }
   \item{Xextra}{
-%%     ~~Describe \code{Xextra} here~~
+Xextra
 }
   \item{Yextra}{
-%%     ~~Describe \code{Yextra} here~~
+Yextra
 }
   \item{mc.rep}{
-%%     ~~Describe \code{mc.rep} here~~
+mc.rep
 }
 }
 \examples{

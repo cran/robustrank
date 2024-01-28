@@ -17,19 +17,19 @@ pm.wilcox.test(Xpaired, Ypaired, Xextra = NULL, Yextra = NULL,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{Xpaired}{
-%%     ~~Describe \code{Xpaired} here~~
+Xpaired
 }
   \item{Ypaired}{
-%%     ~~Describe \code{Ypaired} here~~
+Ypaired
 }
   \item{Xextra}{
-%%     ~~Describe \code{Xextra} here~~
+Xextra
 }
   \item{Yextra}{
-%%     ~~Describe \code{Yextra} here~~
+Yextra
 }
   \item{alternative}{
-%%     ~~Describe \code{alternative} here~~
+alternative
 }
   \item{method}{
 String. SR-MW is recommended, all is for development only.
@@ -41,7 +41,7 @@ String. Do not change it to var, for developpment only.
 Boolean. Do not set it to TRUE, for development only.
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+verbose
 }
   \item{correct}{
 Continuity correction.

@@ -68,8 +68,8 @@ mod.wmw.test=function(X,Y, alternative = c("two.sided", "less", "greater"), corr
         } else if (p.method=="Monte Carlo") {
             #### save rng state before set.seed in order to restore before exiting this function
             save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
-            if (class(save.seed)=="try-error") { set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }                        
-    
+            if (inherits(save.seed,"try-error")) { set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }                        
+            
             set.seed(1)
             if(useC) {
                 z.mc=.Call("mod_wmw_test", X, Y, .corr, switch(method,"wmw"=0,"fp"=1,"fplarge"=2,"combine"=3,"comb2"=0,"nsm3"=4), as.integer(mc.rep), as.integer(1))
